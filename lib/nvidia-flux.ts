@@ -1,10 +1,11 @@
 "use server";
 
+import { ClothingItem, Outfit } from "./db";
+
 export async function generateNvidiaImage(prompt: string) {
   const invokeUrl =
     "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b";
 
-  // Replace this with your actual environment variable if it's named differently
   const apiKey = process.env.NVIDIA_API_KEY;
 
   if (!apiKey) {

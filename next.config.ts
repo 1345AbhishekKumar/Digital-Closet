@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: { serverActions: { bodySizeLimit: '10mb' } },
   output: "standalone",
   transpilePackages: ["motion"],
   // Add an empty turbopack config to resolve the error when webpack config is present

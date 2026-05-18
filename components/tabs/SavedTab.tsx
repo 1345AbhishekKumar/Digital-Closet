@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { Trash2, Share2 } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
 import { generateOutfitImage, compressImage } from '@/lib/image-utils';
-import { generateTryOnImageApi } from '@/lib/gemini';
+import { generateTryOn } from '@/lib/gemini-tryon';
 import { Outfit } from '@/lib/db';
 import Image from 'next/image';
 
@@ -21,7 +21,7 @@ export default function SavedTab() {
     setTryOnResultImage,
     addTryOnResult
   } = useClosetStore();
-
+// ... rest of the component
   const modelFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleModelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +80,8 @@ export default function SavedTab() {
     setTryOnResultImage(null);
 
     try {
-      const imageUrl = await generateTryOnImageApi(modelImage, outfit);
+      const response = await generateTryOn(modelImage, outfit);
+      const imageUrl = response.imageUrl;
       setTryOnResultImage(imageUrl);
       await addTryOnResult(imageUrl, outfit.id);
     } catch (error) {

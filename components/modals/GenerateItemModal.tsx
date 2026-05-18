@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
-import { generateSingleItemImageApi } from '@/lib/gemini';
+import { generateNvidiaImage } from '@/lib/nvidia-flux';
 
 export default function GenerateItemModal() {
   const { 
@@ -22,7 +22,8 @@ export default function GenerateItemModal() {
     if (!generatePrompt.trim()) return;
     setIsGeneratingItem(true);
     try {
-      const imageUrl = await generateSingleItemImageApi(generatePrompt);
+      const response = await generateNvidiaImage(generatePrompt);
+      const imageUrl = `data:image/jpeg;base64,${response.artifacts[0].base64}`;
       setUploadImage(imageUrl);
       setIsGenerateModalOpen(false);
       setGeneratePrompt('');

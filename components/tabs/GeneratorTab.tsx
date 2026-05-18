@@ -5,8 +5,9 @@ import { motion } from 'motion/react';
 import { Shuffle, Save, Lock, Unlock } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
 import { STYLES, COLORS } from '@/lib/constants';
-import { generateOutfitRecommendationApi } from '@/lib/gemini';
+import { generateOutfitRecommendation } from '@/lib/openrouter';
 import { ClothingItem, Category } from '@/lib/db';
+import { compressImage } from '@/lib/image-utils';
 import Image from 'next/image';
 
 export default function GeneratorTab() {
@@ -47,9 +48,57 @@ export default function GeneratorTab() {
 
     try {
       const currentOutfitIds = generatedOutfit.map(i => i.id);
-      const selectedIds = await generateOutfitRecommendationApi(
-        items,
-        lockedItemIds,
+
+      // NVIDIA API limit was 8 images, OpenRouter can handle more but let's keep it reasonable
+      const MAX_ITEMS = 10;
+      let itemsToProcess = [...items];
+
+      if (itemsToProcess.length > MAX_ITEMS) {
+        let lockedItems = items.filter(item => lockedItemIds.has(item.id));
+        if (lockedItems.length > MAX_ITEMS) {
+          lockedItems = lockedItems.slice(0, MAX_ITEMS);
+        }
+
+        let remainingUnlocked = items.filter(item => !lockedItemIds.has(item.id));
+        const selectedUnlocked: ClothingItem[] = [];
+        const requiredCategories: Category[] = ['Tops', 'Bottoms', 'Shoes'];
+        
+        let availableSlots = MAX_ITEMS - lockedItems.length;
+
+        for (const cat of requiredCategories) {
+          if (availableSlots > 0 && !lockedItems.some(i => i.category === cat) && !selectedUnlocked.some(i => i.category === cat)) {
+            const catItems = remainingUnlocked.filter(i => i.category === cat);
+            if (catItems.length > 0) {
+              const randomItem = catItems[Math.floor(Math.random() * catItems.length)];
+              selectedUnlocked.push(randomItem);
+              remainingUnlocked = remainingUnlocked.filter(i => i.id !== randomItem.id);
+              availableSlots--;
+            }
+          }
+        }
+        
+        remainingUnlocked = remainingUnlocked.sort(() => 0.5 - Math.random());
+        if (availableSlots > 0) {
+          selectedUnlocked.push(...remainingUnlocked.slice(0, availableSlots));
+        }
+        
+        itemsToProcess = [...lockedItems, ...selectedUnlocked];
+      }
+
+      // Resize images specifically for the AI recommendation to reduce payload size
+      const processedItems = await Promise.all(itemsToProcess.map(async item => {
+        try {
+          const smallImage = await compressImage(item.imageUrl, 256);
+          return { ...item, imageUrl: smallImage };
+        } catch (e) {
+          console.warn("Failed to compress image for AI:", item.id, e);
+          return item;
+        }
+      }));
+
+      const selectedIds = await generateOutfitRecommendation(
+        processedItems,
+        Array.from(lockedItemIds),
         stylePreference,
         dominantColor,
         mode,
