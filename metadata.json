@@ -1,0 +1,5 @@
+{
+  "name": "Digital Closet",
+  "description": "Upload clothing photos, tag by category, and generate random outfits.",
+  "requestFramePermissions": []
+}
