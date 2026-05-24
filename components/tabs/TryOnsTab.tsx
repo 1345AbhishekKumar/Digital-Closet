@@ -3,11 +3,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Trash2, Save } from 'lucide-react';
-import { useClosetStore } from '@/store/useClosetStore';
+import { useTryOnImages, useDeleteTryOnImage } from '@/hooks/useClosetQueries';
 import Image from 'next/image';
 
 export default function TryOnsTab() {
-  const { tryOnImages, deleteSavedTryOn } = useClosetStore();
+  const { data: tryOnImages = [] } = useTryOnImages();
+  const deleteMutation = useDeleteTryOnImage();
 
   return (
     <motion.div
@@ -43,7 +44,7 @@ export default function TryOnsTab() {
               </div>
 
               <button 
-                onClick={() => deleteSavedTryOn(tryOn.id)}
+                onClick={() => deleteMutation.mutate(tryOn.id)}
                 className="absolute top-4 right-4 bg-red-500 text-white p-3 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <Trash2 size={16} />

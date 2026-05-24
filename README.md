@@ -2,10 +2,12 @@
 
 Welcome to the **Digital Closet** project! This repository contains the source code for managing your digital wardrobe.
 
+![Digital Closet Preview](public/image.png)
+
 ## 🌟 Features
 * **Wardrobe Management**: Digitally organize your clothing and accessories.
 * **Frontend Design**: Modern, responsive user interface.
-* *(Add more specific features here based on your app)*
+* *(Add more speific features here based on your app)*
 
 ## 🚀 Getting Started
 

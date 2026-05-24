@@ -27,6 +27,7 @@ const CLOSET_KEY = 'digital_closet_items';
 const OUTFITS_KEY = 'digital_closet_outfits';
 const STYLE_PREF_KEY = 'digital_closet_style_pref';
 const TRYON_KEY = 'digital_closet_tryons';
+const MODEL_IMAGE_KEY = 'digital_closet_model_image';
 
 export async function getClosetItems(): Promise<ClothingItem[]> {
   const items = await get<ClothingItem[]>(CLOSET_KEY);
@@ -118,4 +119,13 @@ export async function getStylePreference(): Promise<string> {
 
 export async function saveStylePreference(pref: string): Promise<void> {
   await set(STYLE_PREF_KEY, pref);
+}
+
+export async function getModelImage(): Promise<string | null> {
+  const img = await get<string>(MODEL_IMAGE_KEY);
+  return img || null;
+}
+
+export async function saveModelImage(img: string | null): Promise<void> {
+  await set(MODEL_IMAGE_KEY, img);
 }

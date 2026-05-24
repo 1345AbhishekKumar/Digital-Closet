@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { Inter, Anton, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
+import QueryProvider from '@/components/providers/QueryProvider';
 import './globals.css'; // Global styles
 
 const inter = Inter({
@@ -160,7 +161,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               </div>
             </Show>
           </header>
-          {children}
+          <QueryProvider>
+            {children}
+          </QueryProvider>
         </ClerkProvider>
       </body>
     </html>

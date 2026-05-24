@@ -4,24 +4,26 @@ import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { Trash2, Share2 } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
+import { useSavedOutfits, useModelImage, useSaveModelImage, useDeleteOutfit, useAddTryOnResult } from '@/hooks/useClosetQueries';
 import { generateOutfitImage, compressImage } from '@/lib/image-utils';
-import { generateTryOn } from '@/lib/gemini-tryon';
+import { generateTryOn } from '@/lib/gemini';
 import { Outfit } from '@/lib/db';
 import Image from 'next/image';
 
 export default function SavedTab() {
+  const { data: outfits = [] } = useSavedOutfits();
+  const { data: modelImage } = useModelImage();
+  const saveModelImageMutation = useSaveModelImage();
+  const deleteOutfitMutation = useDeleteOutfit();
+  const addTryOnResultMutation = useAddTryOnResult();
+
   const {
-    outfits,
-    modelImage,
-    setModelImage,
-    deleteSavedOutfit,
     setCurrentTryOnOutfitId,
     setIsTryOnModalOpen,
     setIsTryingOn,
-    setTryOnResultImage,
-    addTryOnResult
+    setTryOnResultImage
   } = useClosetStore();
-// ... rest of the component
+
   const modelFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleModelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +35,7 @@ export default function SavedTab() {
       const result = event.target?.result as string;
       if (result) {
         const compressed = await compressImage(result, 1024);
-        setModelImage(compressed);
+        saveModelImageMutation.mutate(compressed);
       }
     };
     reader.readAsDataURL(file);
@@ -80,10 +82,9 @@ export default function SavedTab() {
     setTryOnResultImage(null);
 
     try {
-      const response = await generateTryOn(modelImage, outfit);
-      const imageUrl = response.imageUrl;
+      const imageUrl = await generateTryOn(modelImage, outfit);
       setTryOnResultImage(imageUrl);
-      await addTryOnResult(imageUrl, outfit.id);
+      await addTryOnResultMutation.mutateAsync({ imageUrl, outfitId: outfit.id });
     } catch (error) {
       console.error("Error generating try-on image:", error);
       alert("Failed to generate try-on image. Please try again.");
@@ -130,17 +131,17 @@ export default function SavedTab() {
           <h3 className="font-display text-4xl text-white/50">ARCHIVE EMPTY</h3>
         </div>
       ) : (
-        <div className="flex overflow-x-auto gap-8 pb-12 snap-x scrollbar-hide items-center min-h-[50vh]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 min-h-[50vh]">
           {outfits.map((outfit, i) => (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.1 }}
               key={outfit.id} 
-              className="snap-center shrink-0 w-[85vw] md:w-[450px] border border-white/20 bg-black p-6 relative group"
+              className="w-full border border-white/20 bg-black p-6 relative group"
             >
               <button 
-                onClick={() => deleteSavedOutfit(outfit.id)}
+                onClick={() => deleteOutfitMutation.mutate(outfit.id)}
                 className="absolute top-4 right-4 bg-red-500 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
               >
                 <Trash2 size={16} />

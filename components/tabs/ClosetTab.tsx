@@ -4,18 +4,20 @@ import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Trash2, Check } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
+import { useClosetItems, useDeleteClosetItem, useDeleteSelectedItems } from '@/hooks/useClosetQueries';
 import { compressImage } from '@/lib/image-utils';
 import Image from 'next/image';
 
 export default function ClosetTab() {
+  const { data: items = [] } = useClosetItems();
+  const deleteMutation = useDeleteClosetItem();
+  const batchDeleteMutation = useDeleteSelectedItems();
+
   const { 
-    items, 
     isSelectionMode, 
     selectedItemIds, 
     setIsSelectionMode, 
     toggleSelection, 
-    deleteSelectedItems, 
-    deleteItem,
     clearSelection,
     setUploadImage,
     setIsUploading,
@@ -23,6 +25,12 @@ export default function ClosetTab() {
   } = useClosetStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBatchDelete = async () => {
+    await batchDeleteMutation.mutateAsync(Array.from(selectedItemIds));
+    clearSelection();
+    setIsSelectionMode(false);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,11 +65,12 @@ export default function ClosetTab() {
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
           {isSelectionMode && selectedItemIds.size > 0 && (
             <button 
-              onClick={deleteSelectedItems}
-              className="group flex items-center justify-center gap-4 bg-red-500 text-white px-6 py-3 rounded-full font-mono text-sm uppercase tracking-widest hover:bg-red-600 transition-colors"
+              onClick={handleBatchDelete}
+              disabled={batchDeleteMutation.isPending}
+              className="group flex items-center justify-center gap-4 bg-red-500 text-white px-6 py-3 rounded-full font-mono text-sm uppercase tracking-widest hover:bg-red-600 transition-colors disabled:opacity-50"
             >
               <Trash2 size={18} />
-              <span>Delete ({selectedItemIds.size})</span>
+              <span>{batchDeleteMutation.isPending ? 'Deleting...' : `Delete (${selectedItemIds.size})`}</span>
             </button>
           )}
           {items.length > 0 && (
@@ -147,7 +156,7 @@ export default function ClosetTab() {
                 </div>
               ) : (
                 <button 
-                  onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
+                  onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(item.id); }}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 size={14} />
