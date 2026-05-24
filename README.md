@@ -7,7 +7,6 @@ Welcome to the **Digital Closet** project! This repository contains the source c
 ## 🌟 Features
 * **Wardrobe Management**: Digitally organize your clothing and accessories.
 * **Frontend Design**: Modern, responsive user interface.
-* *(Add more speific features here based on your app)*
 
 ## 🚀 Getting Started
 
@@ -36,5 +35,3 @@ To run the application locally, start the development server:
 npm start
 ```
 
-## 📄 License
-This project is licensed under the Apache License Version 2.0 - see the [.agents/skills/frontend-design/LICENSE.txt](.agents/skills/frontend-design/LICENSE.txt) file for details.# Digital-Closet
