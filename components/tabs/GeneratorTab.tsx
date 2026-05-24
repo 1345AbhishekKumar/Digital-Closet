@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Shuffle, Save, Lock, Unlock } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
+import { useClosetItems, useStylePreference, useUpdateStylePreference, useSaveOutfit } from '@/hooks/useClosetQueries';
 import { STYLES, COLORS } from '@/lib/constants';
 import { generateOutfitRecommendation } from '@/lib/openrouter';
 import { ClothingItem, Category } from '@/lib/db';
@@ -11,22 +12,34 @@ import { compressImage } from '@/lib/image-utils';
 import Image from 'next/image';
 
 export default function GeneratorTab() {
+  const { data: items = [] } = useClosetItems();
+  const { data: stylePreference = 'ANY' } = useStylePreference();
+  const updateStyleMutation = useUpdateStylePreference();
+  const saveOutfitMutation = useSaveOutfit();
+
   const {
-    items,
     generatedOutfit,
     isGenerating,
     flickerImage,
     lockedItemIds,
-    stylePreference,
     dominantColor,
     setGeneratedOutfit,
     setIsGenerating,
     setFlickerImage,
     toggleLock,
-    setStylePreference,
     setDominantColor,
-    saveCurrentOutfit
+    setActiveTab
   } = useClosetStore();
+
+  const saveCurrentOutfit = async () => {
+    if (generatedOutfit.length === 0) return;
+    await saveOutfitMutation.mutateAsync(generatedOutfit);
+    setActiveTab('saved');
+  };
+
+  const setStylePreference = (pref: string) => {
+    updateStyleMutation.mutate(pref);
+  };
 
   const generateOutfit = async (mode: 'shuffle' | 'variation' = 'shuffle') => {
     if (items.length < 3) return;
@@ -49,7 +62,6 @@ export default function GeneratorTab() {
     try {
       const currentOutfitIds = generatedOutfit.map(i => i.id);
 
-      // NVIDIA API limit was 8 images, OpenRouter can handle more but let's keep it reasonable
       const MAX_ITEMS = 10;
       let itemsToProcess = [...items];
 
@@ -85,7 +97,6 @@ export default function GeneratorTab() {
         itemsToProcess = [...lockedItems, ...selectedUnlocked];
       }
 
-      // Resize images specifically for the AI recommendation to reduce payload size
       const processedItems = await Promise.all(itemsToProcess.map(async item => {
         try {
           const smallImage = await compressImage(item.imageUrl, 256);
@@ -266,10 +277,11 @@ export default function GeneratorTab() {
                 </button>
                 <button 
                   onClick={saveCurrentOutfit}
-                  className="font-mono text-sm uppercase tracking-widest bg-[#CCFF00] text-black px-8 py-4 hover:bg-transparent hover:text-[#CCFF00] border border-transparent hover:border-[#CCFF00] transition-colors flex items-center justify-center gap-2"
+                  disabled={saveOutfitMutation.isPending}
+                  className="font-mono text-sm uppercase tracking-widest bg-[#CCFF00] text-black px-8 py-4 hover:bg-transparent hover:text-[#CCFF00] border border-transparent hover:border-[#CCFF00] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Save size={16} />
-                  Save Configuration
+                  {saveOutfitMutation.isPending ? 'SAVING...' : 'Save Configuration'}
                 </button>
               </div>
             )}

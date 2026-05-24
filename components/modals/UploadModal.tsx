@@ -4,19 +4,28 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload } from 'lucide-react';
 import { useClosetStore } from '@/store/useClosetStore';
+import { useAddClosetItem } from '@/hooks/useClosetQueries';
 import { CATEGORIES } from '@/lib/constants';
 import Image from 'next/image';
 
 export default function UploadModal() {
+  const addMutation = useAddClosetItem();
+
   const { 
     isUploading, 
     uploadImage, 
     uploadCategory, 
     setIsUploading, 
     setUploadImage, 
-    setUploadCategory, 
-    saveUploadedItem 
+    setUploadCategory
   } = useClosetStore();
+
+  const handleSave = async () => {
+    if (!uploadImage) return;
+    await addMutation.mutateAsync({ image: uploadImage, category: uploadCategory });
+    setUploadImage(null);
+    setIsUploading(false);
+  };
 
   return (
     <AnimatePresence>
@@ -71,11 +80,12 @@ export default function UploadModal() {
               </div>
 
               <button 
-                onClick={saveUploadedItem}
-                className="w-full bg-black text-[#CCFF00] py-6 font-display text-4xl uppercase tracking-tighter hover:bg-white hover:text-black transition-colors border-2 border-black flex items-center justify-center gap-4"
+                onClick={handleSave}
+                disabled={addMutation.isPending}
+                className="w-full bg-black text-[#CCFF00] py-6 font-display text-4xl uppercase tracking-tighter hover:bg-white hover:text-black transition-colors border-2 border-black flex items-center justify-center gap-4 disabled:opacity-50"
               >
                 <Upload size={32} />
-                INITIALIZE
+                {addMutation.isPending ? 'PROCESSING...' : 'INITIALIZE'}
               </button>
             </div>
           </div>

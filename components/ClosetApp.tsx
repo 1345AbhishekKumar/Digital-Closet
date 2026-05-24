@@ -20,14 +20,11 @@ export default function ClosetApp() {
   const { 
     activeTab, 
     setActiveTab, 
-    loadData, 
     setUploadImage, 
     setIsUploading 
   } = useClosetStore();
 
   useEffect(() => {
-    loadData();
-
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -56,7 +53,7 @@ export default function ClosetApp() {
     return () => {
       window.removeEventListener('paste', handlePaste);
     };
-  }, [loadData, setUploadImage, setIsUploading]);
+  }, [setUploadImage, setIsUploading]);
 
   return (
     <div className="min-h-screen pb-32 relative overflow-x-hidden">

@@ -7,7 +7,7 @@ const getAiInstance = () => {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 };
 
-export const generateTryOnImageApi = async (
+export const generateTryOn = async (
   modelImage: string,
   outfit: Outfit,
 ): Promise<string> => {
@@ -56,40 +56,40 @@ export const generateTryOnImageApi = async (
   throw new Error("No image generated");
 };
 
-export const generateSingleItemImageApi = async (
-  prompt: string,
-): Promise<string> => {
-  const ai = getAiInstance();
-  let response;
-  try {
-    response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image",
-      contents: {
-        parts: [
-          {
-            text: `A high-quality, studio lighting photograph of a single clothing item on a clean white background. The item is: ${prompt}. It should be clearly visible and isolated.`,
-          },
-        ],
-      },
-    });
-  } catch (error: any) {
-    if (
-      error?.status === "RESOURCE_EXHAUSTED" ||
-      error?.message?.includes("429") ||
-      error?.message?.includes("quota")
-    ) {
-      throw new Error(
-        "We've reached our AI API usage limits. Please check your Google AI Studio billing details or try again later.",
-      );
-    }
-    console.error("Gemini API error (Single Item):", error);
-    throw new Error("Failed to generate image.");
-  }
+// export const generateSingleItemImageApi = async (
+//   prompt: string,
+// ): Promise<string> => {
+//   const ai = getAiInstance();
+//   let response;
+//   try {
+//     response = await ai.models.generateContent({
+//       model: "gemini-2.5-flash-image",
+//       contents: {
+//         parts: [
+//           {
+//             text: `A high-quality, studio lighting photograph of a single clothing item on a clean white background. The item is: ${prompt}. It should be clearly visible and isolated.`,
+//           },
+//         ],
+//       },
+//     });
+//   } catch (error: any) {
+//     if (
+//       error?.status === "RESOURCE_EXHAUSTED" ||
+//       error?.message?.includes("429") ||
+//       error?.message?.includes("quota")
+//     ) {
+//       throw new Error(
+//         "We've reached our AI API usage limits. Please check your Google AI Studio billing details or try again later.",
+//       );
+//     }
+//     console.error("Gemini API error (Single Item):", error);
+//     throw new Error("Failed to generate image.");
+//   }
 
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData?.data) {
-      return `data:image/jpeg;base64,${part.inlineData.data}`;
-    }
-  }
-  throw new Error("No image generated");
-};
+//   for (const part of response.candidates?.[0]?.content?.parts || []) {
+//     if (part.inlineData?.data) {
+//       return `data:image/jpeg;base64,${part.inlineData.data}`;
+//     }
+//   }
+//   throw new Error("No image generated");
+// };
